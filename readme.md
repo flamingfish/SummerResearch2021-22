@@ -7,6 +7,7 @@ such as:
 * pandas
 * matplotlib
 * geoplot
+* geopandas
 * plotly
 * folium
 * ...
@@ -185,3 +186,29 @@ system into memory. It also contains a bunch of tests for these functions.
 12:00&nbsp;a.m. until 1:00&nbsp;a.m. Then, it begins animating this data in a
 colourmap overlayed on Queensland, using the tkinter GUI from example *20.
 tkinterGUI*.
+
+## 22. tkinterAskDirectoryExample
+
+Testing out the Tkinter dialog window that asks you to open a folder
+(and returns a string of the path to that folder)
+
+## 23. tempScatterExample
+
+Creating a scatterplot of the example Australian temperature data, but with
+a nicer asthetic (larger points, slightly transparent). Not only does the
+point colour vary with the temperature value but also the point size.
+
+## 24. solution1
+
+The first implementation of the GUI for viewing historical grid frequency data
+across queensland.
+
+The data is selected through dialog windows that ask for the folder location
+of the csv files and also the locaiton of the .xlsx document containing the
+GPS coordinates.
+
+## 25. tkinterShowHide
+
+Example from Stack Overflow demonstrating the ability to show and hide tkinter
+widgets when necessary (this may be useful for the grid frequency GUI before
+the csv files are chosen).
