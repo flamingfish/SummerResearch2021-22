@@ -3,11 +3,16 @@ import geoplot as gplt
 from shapely.geometry import Point
 import matplotlib.pyplot as plt
 import numpy as np
+from descartes import PolygonPatch
 
-
+fig, ax = plt.subplots()
+ax.set_facecolor('#1AA9FF')
+# ax.set_facecolor('xkcd:salmon')
 australia = gpd.read_file('australiaMap2/AUS_2021_AUST_GDA2020.shp')
 print(australia.head())
-ax = gplt.polyplot(australia[australia.AUS_CODE21=='AUS'])
+australia.plot(ax=ax, facecolor='white', edgecolor='black', linewidth=0.2)
+#ax = gplt.polyplot(australia[australia.AUS_CODE21=='AUS'], ax=ax)
+#patch = PolygonPatch(australia['geometry'][0], transform=ax.transData, facecolor='#FFFFFF')
 # # plt.show()
 
 maxTemp = gpd.read_file('data/AustralianAverageMaxTemp.csv')
@@ -40,5 +45,7 @@ sizes = (temp - np.min(temp)) / tempRange * SIZE_RANGE + MIN_SIZE
 #sizes = maxTemp1975['Temp'] / np.max(maxTemp1975['Temp']) * 200 # scaling factor for dot sizes
 
 scatterplt = ax.scatter(maxTemp1975['long'], maxTemp1975['lat'], c=temp, s=sizes, alpha=0.3)
+#ax.set_facecolor('#1AA9FF')
+#ax.set_facecolor('tab:pink')
 
 plt.show()
