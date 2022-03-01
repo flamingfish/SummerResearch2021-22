@@ -212,3 +212,7 @@ GPS coordinates.
 Example from Stack Overflow demonstrating the ability to show and hide tkinter
 widgets when necessary (this may be useful for the grid frequency GUI before
 the csv files are chosen).
+
+## 26. matplotlibLegend
+
+Small test to see how a legend is created on matplotlib.
