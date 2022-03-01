@@ -1,6 +1,8 @@
+from asyncio.proactor_events import _ProactorBaseWritePipeTransport
+from genericpath import getsize
 import numpy as np
 import pandas as pd
-from os.path import dirname, join, isfile
+from os.path import dirname, join, isfile, getsize
 from os import listdir
 import re
 import threading
@@ -14,8 +16,9 @@ class InvalidCSVError(Exception):
 class UnknownPMUName(Exception):
     pass
 
-def get_pmu_date(dir_path, pmu_name):
-    files = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
+def get_pmu_date(dir_path: str, pmu_name: str):
+    pmu_name = pmu_name.lower()
+    files = [f.lower() for f in listdir(dir_path) if isfile(join(dir_path, f))]
     for file in files:
         if pmu_name in file:
             result = pmu_filename_prog.match(file)
@@ -31,6 +34,8 @@ def read_file(file_path, timestamp_col_num, freq_col_num):
     '''
     timestamp_col_num and freq_col_num are zero based indices.
     '''
+    if getsize(file_path) < 30_000_000:
+        raise InvalidCSVError
     try:
         file_data = pd.read_csv(
             file_path,
@@ -72,6 +77,13 @@ def read_pmu_day(dir_path: str, pmu_name: str, year: str, month: str, day: str,
 
 def read_pmu_hour(dir_path: str, pmu_name: str, year: str, month: str, day: str,
                   hour: str, timestamp_col_num: int, freq_col_num: int):
+    pmu_name = pmu_name.lower()
+    for file_name in listdir(dir_path):
+        if pmu_name in file_name.lower():
+            pmu_name = file_name.split('_')[0]
+            break
+    else:
+        raise InvalidCSVError
     print(f'Reading PMU data for {pmu_name}')
     file_name = pmu_name + '_' + year + month + day + hour + '.csv'
     file_path = join(dir_path, file_name)
@@ -132,20 +144,30 @@ def threaded_read_day(dir_path, pmu_names, timestamp_col, freq_col):
     return df
 
 
-def read_hour(dir_path, pmu_names, hour, timestamp_col, freq_col):
+def read_hour(dir_path, pmu_names, hour, timestamp_col, freq_col, yearMonthDayDict):
+    '''yearMonthDayDict should be an empty dictionary to be populated'''
     for pmu_name in pmu_names:
         try:
             year, month, day = get_pmu_date(dir_path, pmu_name)
+            yearMonthDayDict['year'] = year
+            yearMonthDayDict['month'] = month
+            yearMonthDayDict['day'] = day
         except UnknownPMUName:
             print(f'PMU "{pmu_name}" does not exist.')
         else:
             print(f'Date: {day}/{month}/{year}')
             break
+    else: # no pmu names existed
+        return pd.DataFrame()
     
     series_list = []
     for pmu_name in pmu_names:
         print(f'Begin retrieving data for PMU: {pmu_name}')
-        pmu_data = read_pmu_hour(dir_path, pmu_name, year, month, day, hour, 0, 3)
+        try:
+            pmu_data = read_pmu_hour(dir_path, pmu_name, year, month, day, hour, 0, 3)
+        except InvalidCSVError:
+            print(f'Invalid CSV for pmu: {pmu_name}')
+            continue
         series_list.append(pmu_data)
     
     df = pd.concat(series_list, axis=1, keys=[s.name for s in series_list])
@@ -193,9 +215,11 @@ def test_read_pmu_day():
 
 
 def test_read_pmu_hour():
-    year, month, day = get_pmu_date('D:\\PMU\\2021\\07\\28', 'Ecblue04')
+    #year, month, day = get_pmu_date('D:\\PMU\\2021\\07\\28', 'Ecblue04')
+    year, month, day = get_pmu_date('D:\\PMU\\2021\\07\\28', 'Ecblue02')
     hour = '00'
-    hour_data = read_pmu_hour('D:\\PMU\\2021\\07\\28', 'Ecblue04', year, month, day, hour, 0, 3)
+    # hour_data = read_pmu_hour('D:\\PMU\\2021\\07\\28', 'Ecblue04', year, month, day, hour, 0, 3)
+    hour_data = read_pmu_hour('D:\\PMU\\2021\\07\\28', 'Ecblue02', year, month, day, hour, 0, 3)
     print(hour_data)
     
 
