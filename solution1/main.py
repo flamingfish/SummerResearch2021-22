@@ -6,28 +6,29 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
 import numpy as np
-#import geoplot as gplt
 import geopandas as gpd
 import pandas as pd
 import matplotlib.pyplot as plt
-#from descartes import PolygonPatch
-
-#from scipy.interpolate import griddata
-#from scipy.interpolate import Rbf
-#from shapely.geometry import Point
 import matplotlib.animation as animation
-#from os.path import dirname, join
 
 # My imports
 from readFuncs import threaded_read_day, read_gps, read_hour, get_pmu_date
 from zoom_factory import zoom_factory
 from panFactory import panFactory
-#from reset_detail import reset_detail_factory
 
 import datetime
 import matplotlib.dates as mdates
 
-# ============= Data stuff ===============
+# ===== | ============================== | ===== #
+# ===== V These constants can be changed V ===== #
+
+# Whether or not to use the pmus from the above list
+USE_PREDEFINED_PMUS = False
+# How many seconds to keep track of for the line plot on the left
+LINE_PLOT_WINDOW = 2
+
+# ===== ^ These constants can be changed ^ ===== #
+# ===== | ============================== | ===== #
 
 pmus = [
     'ECCATE',
@@ -62,61 +63,6 @@ pmus = [
     'X61106-C'
 ]
 
-# Whether or not to use the pmus from the above list
-USE_PREDEFINED_PMUS = False
-
-# gps_data = read_gps('D:\\PMU\\PMU_GPS.xlsx')
-# hour_data = read_hour('D:\\PMU\\2021\\07\\28', pmus, '00', 0, 3)
-
-# hour_data.columns = hour_data.columns.str.lower()
-# gps_data.index = gps_data.index.str.lower()
-
-# # print(hour_data)
-# # print(gps_data)
-# # print(gps_data.loc[hour_data.columns.tolist(), :])
-
-# relevant_gps_data = gps_data.loc[hour_data.columns.tolist(), :]
-# timestamp = hour_data.index[0]
-# freq = hour_data.loc[timestamp, :]
-# freq.name = 'Frequency'
-# print(freq)
-
-# timeslice_data = pd.concat([relevant_gps_data, freq], axis=1)
-# print(timeslice_data)
-# timeslice_data_arr = timeslice_data.to_numpy()
-# print(timeslice_data_arr)
-
-
-# long = timeslice_data_arr[:, 0]
-# lat = timeslice_data_arr[:, 1]
-# freq = timeslice_data_arr[:, 2]
-# pts = 10_000
-
-# Queensland coordinates
-maxLat = -9.942333
-minLat = -29.184142
-maxLong = 153.569427
-minLong = 137.945578
-
-# [x, y] = np.meshgrid(np.linspace(minLong, maxLong, int(np.sqrt(pts))),
-#                      np.linspace(minLat, maxLat, int(np.sqrt(pts))))
-
-# z = griddata((long, lat), freq, (x, y), method='cubic', fill_value=50)
-
-# print('Completed extracting data')
-
-
-# # ================ Map stuff ==================
-
-# australia = gpd.read_file('australiaMap/STE_2021_AUST_GDA2020.shp')
-# qld = australia[australia.STE_NAME21=='Queensland']
-# maxLat = -9.942333
-# minLat = -29.184142
-# maxLong = 153.569427
-# minLong = 137.945578
-
-# ================ Tkinter stuff ==================
-
 TIMESTAMP_COL = 0
 FREQ_COL = 3
 
@@ -125,8 +71,9 @@ MAX_SIZE = 200
 MIN_SIZE = 20
 SIZE_RANGE = MAX_SIZE - MIN_SIZE
 # For the plot on the left.
-#MAX_ARRAY_LENGTH = 50 * 60
-MAX_ARRAY_LENGTH = 100
+#MAX_ARRAY_LENGTH = 50 * 60 # For one minute
+#MAX_ARRAY_LENGTH = 100
+MAX_ARRAY_LENGTH = LINE_PLOT_WINDOW * 50
 
 class DataManager:
     def __init__(self):
@@ -167,15 +114,6 @@ class DataManager:
         print(self.runningTimestamps)
         print(self.runningFrequencies)
 
-
-        # self.runningData = np.concatenate(([self.timestamp], self.freq), axis=0)
-        # self.runningData = np.reshape(self.runningData, (1, -1))
-        # print('starting to set index 50 times')
-        # for i in range(1, 51):
-        #     self.setNewIndex(i)
-        # print('finished setting index 50 times')
-        # print(self.runningData)
-
         print('before min/max')
         pmuDataArr = self.pmuData.to_numpy()
         print(pmuDataArr)
@@ -197,10 +135,6 @@ class DataManager:
         self.freq = self.timesliceDataArr[:, 2]
 
         self.timestamp = self.pmuData.index[index]
-        # timeslice = np.reshape(np.concatenate(([self.timestamp], self.freq), axis=0), (1, -1))
-        # self.runningData = np.concatenate((self.runningData, timeslice), axis=1)
-        # print('running data')
-        # print(self.runningData)
         offset = 0 if np.size(self.runningTimestamps) < MAX_ARRAY_LENGTH else 1
         self.runningTimestamps = np.append(self.runningTimestamps[offset:], self.timestamp)
         self.runningFrequencies = np.vstack([self.runningFrequencies[offset:, :], self.freq])
@@ -239,7 +173,6 @@ class App(tk.Tk):
         self.ax1 = self.fig.add_subplot(1, 2, 1)
         self.ax2 = self.fig.add_subplot(1, 2, 2)
         self.ax2.set_facecolor('#68D9FF')
-        # self.ax = gplt.polyplot(self.qld, ax=self.ax)
         self.qld.plot(ax=self.ax2, facecolor='white', edgecolor='black', linewidth=0.2)
 
         self.animIndex = 0
@@ -249,8 +182,6 @@ class App(tk.Tk):
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
-        #self.toolbar = NavigationToolbar2Tk(self.canvas, self, pack_toolbar=False)
-        #self.toolbar.update()
         self.canvas.mpl_connect('key_press_event', key_press_handler)
 
         self.btnFrame = tk.Frame(self)
@@ -320,15 +251,8 @@ class App(tk.Tk):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def setupAx1(self):
-        # self.linePlots = []
-        #x = self.dataManager.runningData[:, 0]
         x = self.dataManager.runningTimestamps
-        # for i in range(1, np.size(self.dataManager.runningData, axis=0) + 1):
-        #     self.linePlots.append(self.ax1.plot(x, self.dataManager.runningData[:, i]))
-        # #self.linePlot = self.ax1.plot()
-        # self.canvas.draw()
 
-        #y = self.dataManager.runningData[:, 1:]
         y = self.dataManager.runningFrequencies
         self.lines = self.ax1.plot(x, y)
 
@@ -336,14 +260,6 @@ class App(tk.Tk):
         self.ax1.legend(self.dataManager.relevantGpsData.index.tolist(), loc='upper left')
 
         self.canvas.draw()
-        
-        print('x')
-        print(x)
-        print('y')
-        print(y)
-        #exit()
-
-        #self.anim1 = animation.FuncAnimation(self.fig, self.animateAx1, interval)
 
     def setupAx2(self):
         hour = self.setHour.get()
@@ -369,9 +285,6 @@ class App(tk.Tk):
         plt.ylabel('Latitude (°)')
         self.canvas.draw()
 
-        # self.anim = animation.FuncAnimation(self.fig, self.animateAx2, interval=50, blit=True)
-
-        #self.ax2.figure.canvas.toolbar.push_current()
         zoom_func = zoom_factory(self.ax2, base_scale=1.1)
         panFunc = panFactory(self.ax2)
 
@@ -389,15 +302,11 @@ class App(tk.Tk):
             plot.set_data(x, self.dataManager.runningFrequencies[:, i].flatten())
             i += 1
 
-        # if self.animIndex % 50 == 0:
-        #     self.ax1.relim()
-        #     self.ax1.autoscale_view()
         self.ax1.relim()
         self.ax1.autoscale_view()
 
     def animateAx2(self, i):
         self.animIndex += 1
-        #self.dataManager.setNewIndex(self.animIndex)
         self.dataManager.incrementTime()
         pointSizes = (self.dataManager.freq - self.dataManager.minFreq) / self.dataManager.freqRange * SIZE_RANGE + MIN_SIZE
         self.scatterplt.set_sizes(pointSizes)
