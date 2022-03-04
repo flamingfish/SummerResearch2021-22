@@ -56,7 +56,7 @@ patch = PolygonPatch(aus['geometry'][0], transform=ax.transData)
 # scatterplt = plt.scatter(x, y, 1, z, cmap='gist_rainbow')
 # scatterplt.set_clip_path(patch)
 implt = plt.imshow(z, extent=[np.min(x), np.max(x), np.min(y), np.max(y)], origin='lower',
-        cmap='gist_rainbow')
+        cmap='gist_rainbow_r', vmin=6, vmax=35)
 implt.set_clip_path(patch)
 
 plt.colorbar(label='Elevation above sea level (m)')
@@ -69,5 +69,5 @@ plt.ylabel('Latitude (°)')
 #     ax=ax,
 #     s=1
 # )
-plt.scatter(long, lat)
+plt.scatter(long, lat, s=10, c='#000000', zorder=20)
 plt.show()

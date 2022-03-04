@@ -85,5 +85,5 @@ plt.ylabel('Latitude (°)')
 #     ax=ax,
 #     s=1
 # )
-plt.scatter(long, lat)
+plt.scatter(long, lat, s=10, c='#000000', zorder=20)
 plt.show()
