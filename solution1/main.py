@@ -22,7 +22,7 @@ import matplotlib.dates as mdates
 # ===== | ============================== | ===== #
 # ===== V These constants can be changed V ===== #
 
-# Whether or not to use the pmus from the above list
+# Whether or not to use the pmus from the list below
 USE_PREDEFINED_PMUS = False
 # How many seconds to keep track of for the line plot on the left
 LINE_PLOT_WINDOW = 2
@@ -94,7 +94,7 @@ class DataManager:
         self.gpsData = read_gps(path)
         self.gpsData.index = self.gpsData.index.str.lower()
         # comment/uncomment this:
-        if USE_PREDEFINED_PMUS:
+        if not USE_PREDEFINED_PMUS:
             self.pmuList = self.gpsData.index.tolist()
 
     def prepareData(self, time: datetime.datetime):
