@@ -1,4 +1,37 @@
 # Electricity Grid Visualisation
+## How to set up and run
+The code for the final application can be found in the `solution1` directory.
+The application requires the following Python libraries to be installed:
+* Numpy
+* Pandas
+* Geopandas
+* Matplotlib
+
+Installing the geopandas library requires the Anaconda package manager, which
+can be downloaded from here:
+https://www.anaconda.com/products/individual
+
+Run the following in a terminal to install the libraries:
+```
+pip install numpy pandas matplotlib
+conda install geopandas
+```
+Alternatively, you can run `install.bat` on Windows, or `install.sh` on Mac
+or Linux to install the libraries (found in `solution1` directory).
+Note that either option assumes that Python, Pip and Anaconda are installed and
+can be found on `PATH`.
+
+To run the application, navigate to `/solution1` in a terminal and run:
+```
+python main.py
+```
+Alternatively, double click `main.py` from the file explorer.
+
+### \*Important\*
+Note that occasionally the program does not begin animating the data until the
+window is resized.
+
+# Development log
 
 The examples I created require a number of packages to be installed to work,
 such as:
